@@ -1,0 +1,68 @@
+---
+
+# --------------------------------------------------------------
+# = mysql Server
+mysql::server::remove_default_accounts: false
+mysql::server::service_enabled: true
+mysql::server::restart: true
+mysql::server::purge_conf_dir: false
+mysql::server::override_options:
+  mysqld:
+    bind-address: 127.0.0.1
+    max_connections: 15
+    long_query_time: 10
+    query_cache_limit: '8M'
+    join_buffer_size: '4M'
+    tmp_table_size: '32M'
+    max_heap_table_size: 32M'
+
+# --------------------------------------------------------------
+# = mysql Client
+# mysql::client::package_manage: true
+# mysql::client::package_name: 'mariadb-client-10.0'
+
+# --------------------------------------------------------------
+# = MySQL - Backup
+mysql::server::backup::backupdir: /usr/local/backup/mysql
+mysql::server::backup::backupcompress: true
+mysql::server::backup::backupuser: backup
+mysql::server::backup::backuppassword: backup
+mysql::server::backup::time:
+  - 23
+  - 05
+
+# --------------------------------------------------------------
+# = MySQL - Databases
+mysql::databases:
+  icinga2_data:
+    ensure  : present
+    user    : "%{hiera('icinga2::ido_db_user')}"
+    password: "%{hiera('icinga2::ido_db_pass')}"
+    host    : "%{hiera('icinga2::ido_db_host')}"
+  icinga2_auth:
+    ensure  : present
+    user    : "%{hiera('icinga2::web_db_user')}"
+    password: "%{hiera('icinga2::web_db_pass')}"
+    host    : "%{hiera('icinga2::web_db_host')}"
+
+# --------------------------------------------------------------
+# = add some icinga2-Core Features
+icinga2::features:
+  command:
+    manage_file: true
+  syslog:
+    manage_file: true
+
+# --------------------------------------------------------------
+# = add LiveStatus Listener for Icinga2-Core
+icinga2::object::livestatuslistener:
+  socket:
+      socket_type: 'unix'
+      socket_path: '/var/run/icinga2/cmd/livestatus'
+  network:
+      socket_type: 'tcp'
+      bind_host  : '0.0.0.0'
+      bind_port  : '8080'
+
+
+# EOF
